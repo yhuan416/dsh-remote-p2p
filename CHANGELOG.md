@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.2 — 2026-11-23
+
+### Added
+
+- `GET /api/remote-hosts/self-check`: a read-only feasibility/regression probe for the M2 design — in-process ed25519
+  sign/verify plus node fingerprint, availability of `ctx.connection.authenticatedUrl`, and a server-side cookie exchange
+  (`fetch` of the authenticated URL, 303 + Set-Cookie).
+- `docs/M2-FEASIBILITY.zh.md`: evidence, minimal design (node identity, signed grant, `/identity` + `/exchange`, pairing and
+  peers registry), risks and acceptance criteria.
+
 ## 0.1.1 — 2026-11-23
 
 ### Added

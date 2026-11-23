@@ -1,6 +1,6 @@
 {
   "name": "dsh-remote-p2p",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "description": "One DSH plugin for both halves of a remote link: publish this node to peers, and proxy paired peers under /remotes/<id> (successor of dsh-remote-hub + dsh-remote-agent).",
