@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.2 — 2026-11-23
+
+### Fixed
+
+- **Grant remotes: WebSocket/RPC upgrades returned 401** (the UI showed "无法连接"). DSH browser cookies are bound to the request
+  authority, and the upgrade path (like the health probe and deep-link fetch) still sent the tunnel/upstream Host. All proxied
+  headers now go through one `authorityOf()` helper, so grant peers receive their own authority for Host/Origin.
+
 ## 0.2.1 — 2026-11-23 · pairing and revocation
 
 ### Added
