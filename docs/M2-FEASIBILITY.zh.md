@@ -92,3 +92,27 @@
 2. 全程不读取对端明文 token（不看 `remote-agent.json` 的 token 字段也能工作）；
 3. 撤销 peer（删公钥/记录）后 exchange 立即失败；
 4. 旧 ssh 远端配置不受影响。
+
+## 5. 实现状态（2026-11-23，0.2.0）
+
+已实现并跨机验证（WSL → n100:3084，ssh 仅作网络传输）：
+
+| 项 | 状态 |
+|---|---|
+| `node-identity.json`（ed25519，nodeId=指纹）| ✅ |
+| 公共 peer 端点 `/api/remote-p2p/{identity,exchange,stats}`（签名鉴权，不走 DSH cookie）| ✅ |
+| 服务端换 cookie（`authenticatedUrl` + 本地 fetch），明文 token 不出进程 | ✅ |
+| viewer `auth: "grant"`（direct 或 ssh 传输均可），TOFU 固定对端公钥到 `peers.json` | ✅ |
+| 对端 authority 用于 Host/Origin（DSH cookie 按 authority 绑定）| ✅ |
+| 失败回退旧 `tokenFile` 路径 | ✅（`auth` 缺省为 `token`）|
+
+跨机实测：`/remotes/n100-grant/` → 200，`tokenSource: null`，n100 侧 `exchanges: 1`，双方 `peers.json` 各固定对方 nodeId。
+注意：backend 的 token 文件在测试前被删除，证明 grant 路径完全不读它。
+
+### 还没做（M2 剩余）
+
+1. **配对 UX**：目前是 TOFU（首次 exchange 固定公钥）；需要短码配对 + 显式确认 + 删除/撤销 peer。
+2. viewer 侧 `auth: "grant"` 的配置入口（目前只能改 `remote-hosts.json`；管理 API/卡片尚未暴露）。
+3. 卡片展示 nodeId/配对状态/交换计数（接口已有，UI 未加）。
+4. `direct-http` 连接器（真实无 ssh 传输）；本次仍是 ssh 隧道做网络载体。
+5. 多 viewer 并发与 cookie 过期后的自动重取（已加 401 重试路径，需压力验证）。

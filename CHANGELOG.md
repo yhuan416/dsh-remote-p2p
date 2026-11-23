@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.2.0 — 2026-11-23 · M2 slice
+
+### Added
+
+- **Node identity**: `$DSH_HOME/node-identity.json` holds an ed25519 keypair; `nodeId` is the first 16 hex of sha256(SPKI).
+- **Peer endpoints** (public, signature-authorised instead of DSH-cookie-authenticated): `GET /api/remote-p2p/identity`,
+  `POST /api/remote-p2p/exchange`, `GET /api/remote-p2p/stats`. Exchange verifies the viewer's signed proof
+  (`aud` = backend nodeId, ±120s), TOFU-pins its public key in `$DSH_HOME/peers.json`, and mints the DSH session cookie
+  **inside the backend process** — the plaintext launch token is never written for, or sent to, the peer.
+- **Viewer grant auth**: a remote may set `auth: "grant"` (works for both `direct` and `ssh-tunnel` transports); the viewer fetches
+  the peer identity, pins/verifies its public key, signs a proof, exchanges it for a cookie, and proxies as before. No token file
+  and no plaintext token in the flow.
+- Store/API expose `auth` and the pinned peer `nodeId`; `remote-hosts.json` keeps working (records without `auth` default to `token`).
+
+### Verified
+
+- Two local instances: viewer with `auth: "grant"` proxied `/remotes/<id>/` → 200 while the backend's token file was deleted,
+  backend stats showed `exchanges: 1`, and both sides pinned each other in `peers.json`.
+- **Cross-host (WSL → n100 instance :3084, ssh used as network transport only)**: exchange succeeded and `/remotes/<id>/` → 200
+  with `tokenSource: null`. DSH binds its browser cookie to the request authority (Host), so the identity endpoint now publishes
+  `authority` and the viewer forwards with that Host/Origin — without it the minted cookie was rejected (401).
+
 ## 0.1.2 — 2026-11-23
 
 ### Added
