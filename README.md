@@ -435,6 +435,13 @@ page) now lives in the separate **dsh-opencode-client** project.
 This plugin keeps only dsh-backend concerns: reverse proxy, SSH tunnels, the top-bar switcher, and
 `remote_sessions` for dsh remote hosts.
 
+## Direct transport without ssh
+
+A remote can skip ssh entirely: `transport: "direct"` with `upstream` pointing at the peer's LAN address, plus
+`auth: "grant"`. The peer must bind `webserver.host` to a concrete interface IP (DSH rejects wildcard binds) and both sides
+pair with grant signatures (see `docs/DIRECT-HTTP.zh.md`). Binding a LAN IP means the process no longer listens on
+`127.0.0.1`, so local health checks must use the LAN address.
+
 ## Plugin configuration card
 
 The plugin page (Settings → Plugins → dsh-remote-p2p) shows a **node status card** (`plugins.bundle.config` slot):

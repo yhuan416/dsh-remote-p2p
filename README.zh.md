@@ -354,6 +354,12 @@ cd ~/.dsh/plugins/dsh-remote-p2p
 
 管理入口：**设置 → 插件 → 已安装插件 → dsh-remote-p2p**。
 
+## 无 ssh 的 direct 传输
+
+远端可以不走 ssh：`transport: "direct"` + `upstream` 指向对端的局域网地址，配合 `auth: "grant"`。要求对端把
+`webserver.host` 绑到具体网卡 IP（DSH 拒绝 wildcard 绑定），并用 grant 签名互认（详见 `docs/DIRECT-HTTP.zh.md`）。
+绑定 LAN IP 后该进程不再监听 `127.0.0.1`，本机脚本里的健康检查要改用 LAN 地址。
+
 ## 插件配置页
 
 插件页（设置 → 插件 → dsh-remote-p2p）带一张**节点状态卡片**（`plugins.bundle.config` 插槽）：
