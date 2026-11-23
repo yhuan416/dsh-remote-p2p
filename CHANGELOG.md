@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.1 — 2026-11-23 · pairing and revocation
+
+### Added
+
+- Admin APIs: `GET /api/remote-hosts/peers` (pinned viewers + per-remote pairing state), `POST .../pair`,
+  `POST .../unpair`, `POST .../peers/revoke`, `POST .../peers/approve`.
+- `grantPolicy` config: `tofu` (default, pin on first exchange) or `strict` (exchange only for already-approved peers).
+- Plugin config card: pairing section — per-remote state/auth/nodeId/paired badge with 配对/解除 buttons, pinned viewer list
+  with 撤销, and the effective policy.
+
 ## 0.2.0 — 2026-11-23 · M2 slice
 
 ### Added
