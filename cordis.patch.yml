@@ -1,0 +1,9 @@
+# dsh-remote-p2p bundle patch: one row for both halves of a remote link.
+#  - backend: publish this process's identity/token file so paired peers can mint a cookie (identityFile)
+#  - viewer:  proxy paired peers under /remotes/<id>/ unless another instance already owns this DSH_HOME
+- insert:
+    - id: remote-p2p
+      name: dsh-remote-p2p
+      config:
+        remotes: []          # see README: id / label / upstream / ssh / token
+        identityFile: ''     # default: $DSH_HOME/remote-agent.json

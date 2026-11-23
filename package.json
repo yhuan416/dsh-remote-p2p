@@ -1,0 +1,66 @@
+{
+  "name": "dsh-remote-p2p",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "One DSH plugin for both halves of a remote link: publish this node to peers, and proxy paired peers under /remotes/<id> (successor of dsh-remote-hub + dsh-remote-agent).",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "icon.svg",
+    "LICENSE",
+    "README.md",
+    "README.zh.md",
+    "ARCHITECTURE.md",
+    "COMPATIBILITY.md",
+    "CHANGELOG.md",
+    "TODO.md",
+    "docs",
+    "scripts/install.sh",
+    "scripts/check.mjs",
+    "scripts/check-launcher.mjs"
+  ],
+  "engines": {
+    "node": ">=22.19.0",
+    "dsh": ">=0.2.1-rc.2"
+  },
+  "license": "MIT",
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "remote",
+    "ssh"
+  ],
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-plugin-manager"
+      ]
+    }
+  },
+  "scripts": {
+    "check": "node scripts/check.mjs && node scripts/check-launcher.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yhuan416/dsh-remote-hub.git"
+  },
+  "homepage": "https://github.com/yhuan416/dsh-remote-hub#readme",
+  "bugs": {
+    "url": "https://github.com/yhuan416/dsh-remote-hub/issues"
+  },
+  "icon": "./icon.svg"
+}
