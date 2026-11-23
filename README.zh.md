@@ -354,6 +354,17 @@ cd ~/.dsh/plugins/dsh-remote-p2p
 
 管理入口：**设置 → 插件 → 已安装插件 → dsh-remote-p2p**。
 
+## 插件配置页
+
+插件页（设置 → 插件 → dsh-remote-p2p）带一张**节点状态卡片**（`plugins.bundle.config` 插槽）：
+
+- 身份文件路径与新鲜度（对端能否读到本节点 token）、hostname/pid/webPort；
+- viewer 锁的持有者、ssh 隧道列表与在线状态；
+- 已配置对端数量、生效配置（响应超时/探测间隔/顶栏样式）、`DSH_HOME`；
+- 「刷新」「打开 /remotes/」快捷入口；字段编辑仍用由 Config schema 生成的表单。
+
+状态来自 `GET /api/remote-hosts/node`。数据刷新 15s 一次。
+
 ## 多实例与单例资源
 
 Hub 与 backend 各有**按进程/按 `DSH_HOME` 的单例资源**，混用会互相踩：

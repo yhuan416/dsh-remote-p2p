@@ -435,6 +435,17 @@ page) now lives in the separate **dsh-opencode-client** project.
 This plugin keeps only dsh-backend concerns: reverse proxy, SSH tunnels, the top-bar switcher, and
 `remote_sessions` for dsh remote hosts.
 
+## Plugin configuration card
+
+The plugin page (Settings → Plugins → dsh-remote-p2p) shows a **node status card** (`plugins.bundle.config` slot):
+
+- identity file path and freshness (whether peers can read this node's token), hostname/pid/web port;
+- viewer lock holder, ssh tunnels and liveness;
+- configured peer count, effective viewer config (upstream timeout / probe interval / switcher), `DSH_HOME`;
+- refresh and "open /remotes/" shortcuts; schema editing stays in the generated form.
+
+Data comes from `GET /api/remote-hosts/node` and refreshes every 15s.
+
 ## Multiple hubs and singleton resources
 
 Hub and backends each own per-process / per-`DSH_HOME` resources; sharing them makes the instances fight:

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.1 — 2026-11-23
+
+### Added
+
+- **Plugin configuration card** for the Plugins page (`plugins.bundle.config` slot, key `dsh-remote-p2p`): node identity
+  (file path, freshness, hostname/pid/web port), viewer lock owner, ssh tunnels with liveness, configured peer count and the
+  effective viewer config, plus shortcuts to refresh and open `/remotes/`. Schema editing stays in the generated settings form.
+- `GET /api/remote-hosts/node` serves that card's status (plugin version, identity file, lock, tunnels, effective config).
+
 ## 0.1.0 — 2026-11-23 · merged package
 
 `dsh-remote-p2p` is the successor of `dsh-remote-hub` 0.7.x and `dsh-remote-agent` 0.2.x; entries below this release are that lineage.
