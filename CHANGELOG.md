@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.2.3 — 2026-11-26 · 异步派发
+
+### Added
+
+- **异步派发四件套**：`remote_dispatch` / `remote_wait` / `remote_steer` / `remote_interrupt`。
+  `remote_dispatch` 立刻返回 `dispatchId`（远端后台继续跑），同一 `key` 幂等、不同参数冲突；
+  `remote_wait` 给收据（`pending/running/succeeded/failed/cancelled/unknown`）并按预算等待；
+  `remote_steer` 向同一远端会话补话；`remote_interrupt` 请求停止。
+- **派发台账**（`lib/dispatch.js`）：纯状态机 + 每节点/全局并发预算 + 终态只结算一次；
+  `unknown` 明确表示"结果无法确认，禁重提"。台账计数与已挂载工具名经
+  `/api/remote-hosts/node` 暴露（`dispatches` / `dispatchTools`），便于部署自检。
+- `lib/dispatch-tools.js`：四个工具定义为可注入依赖的纯函数集，离线可测。
+
+### Notes
+
+- 顶部环境切换栏保持原样（注入式常驻条）。曾尝试迁到 client 插件的 `main` 面板，
+  体验上多了一层壳，已回退；若将来要在 DSH Desktop 上使用，需要注意注入式固定条会
+  覆盖窗口 chrome（红绿灯/拖拽区），那条路仍需改到 slot 里实现。
+
 ## 0.2.2 — 2026-11-23
 
 ### Fixed

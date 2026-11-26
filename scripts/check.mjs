@@ -5,6 +5,8 @@ import fs from 'node:fs'
 import * as entry from '../lib/index.js'
 import { promptText, startRemoteSubagent, createRemoteProvider, parseStructured } from '../lib/remote-subagent.js'
 import * as identity from '../lib/identity.js'
+import { createDispatchLedger, isTerminalState } from '../lib/dispatch.js'
+import { createDispatchTools } from '../lib/dispatch-tools.js'
 
 assert.equal(entry.name, 'remote-p2p')
 assert.deepEqual(entry.inject, ['webServer', 'connection', 'tools'])
@@ -58,6 +60,89 @@ assert.ok(pkg.files.includes('cordis.patch.yml'))
 assert.ok(pkg.files.includes('ARCHITECTURE.md'))
 
 assert.equal(promptText([{ type: 'text', text: 'a' }, { type: 'image' }, { type: 'text', text: 'b' }]), 'a\nb')
+
+// Dispatch ledger: idempotency, terminal-once settlement, and per-node budgets.
+{
+  let clock = 1000
+  const ledger = createDispatchLedger({ now: () => clock, maxPerNode: 2, maxTotal: 4, retainTerminal: 2 })
+  const first = ledger.begin({ id: 'k1', nodeId: 'n100', fingerprint: 'f1' })
+  assert.equal(first.ok, true)
+  assert.equal(first.duplicate, false)
+  assert.equal(first.record.state, 'pending')
+  assert.equal(ledger.markRunning('k1', { sessionId: 's1' }).state, 'running')
+  assert.equal(ledger.get('k1').sessionId, 's1')
+
+  const repeat = ledger.begin({ id: 'k1', nodeId: 'n100', fingerprint: 'f1' })
+  assert.equal(repeat.duplicate, true, 'same key + fingerprint is idempotent')
+  assert.equal(repeat.record.id, 'k1')
+  const conflict = ledger.begin({ id: 'k1', nodeId: 'n100', fingerprint: 'other' })
+  assert.equal(conflict.ok, false)
+  assert.equal(conflict.reason, 'conflict', 'same key with different params must not re-run')
+
+  clock = 2000
+  assert.equal(ledger.settle('k1', 'succeeded', { output: 'done' }).state, 'succeeded')
+  assert.equal(isTerminalState('succeeded'), true)
+  const again = ledger.settle('k1', 'failed', { output: 'late' })
+  assert.equal(again.state, 'succeeded', 'a second settlement must not overwrite the first')
+  assert.equal(again.output, 'done')
+
+  assert.equal(ledger.begin({ id: 'k2', nodeId: 'n100', fingerprint: 'f2' }).ok, true)
+  assert.equal(ledger.begin({ id: 'k3', nodeId: 'n100', fingerprint: 'f3' }).ok, true)
+  const capped = ledger.begin({ id: 'k4', nodeId: 'n100', fingerprint: 'f4' })
+  assert.equal(capped.ok, false)
+  assert.equal(capped.reason, 'rate-limited', 'per-node budget applies')
+  assert.equal(ledger.begin({ id: 'k5', nodeId: 'm65', fingerprint: 'f5' }).ok, true, 'another node has its own budget')
+
+  const summary = ledger.summary()
+  assert.equal(summary.byState.succeeded, 1)
+  assert.equal(summary.byState.pending, 3)
+  assert.equal(summary.active, 3)
+  assert.equal(ledger.list().length, 4)
+}
+
+// Dispatch tools: idempotent start, receipt rendering, routing of steer/cancel.
+{
+  let settleRun
+  const rpcCalls = []
+  const tools = createDispatchTools({
+    ledger: createDispatchLedger(),
+    handles: new Map(),
+    listHosts: () => [{ id: 'n100' }],
+    getHost: id => (id === 'n100' ? { id: 'n100' } : undefined),
+    resolveWorkspace: async () => undefined,
+    start: async () => ({ id: 'ses_remote_1', result: new Promise(resolve => { settleRun = resolve }) }),
+    rpc: async (host, method, params) => { rpcCalls.push({ host: host.id, method, params }); return { ok: true, value: { accepted: true } } },
+    newId: () => 'generated-id-0001',
+  })
+  const byName = new Map(tools.map(tool => [tool.name, tool]))
+  assert.deepEqual(tools.map(t => t.name), ['remote_dispatch', 'remote_wait', 'remote_steer', 'remote_interrupt'])
+
+  const key = 'dispatch-test-0001'
+  assert.match(await byName.get('remote_dispatch').execute({ host: 'n100', task: 'run the tests', key }), /remote_dispatch started/)
+  await new Promise(r => setImmediate(r))
+  const running = await byName.get('remote_wait').execute({ dispatchId: key, timeoutMs: 0 })
+  assert.match(running, /state: running/)
+  assert.match(running, /session: ses_remote_1/)
+
+  assert.match(await byName.get('remote_dispatch').execute({ host: 'n100', task: 'run the tests', key }), /already started/)
+  assert.match(await byName.get('remote_dispatch').execute({ host: 'n100', task: 'a different task', key }), /conflict/)
+
+  assert.match(await byName.get('remote_steer').execute({ dispatchId: key, message: 'also run lint' }), /queued/)
+  assert.equal(rpcCalls[0].method, 'session/prompt')
+  assert.equal(rpcCalls[0].params.request.sessionId, 'ses_remote_1')
+  assert.equal(rpcCalls[0].params.request.content[0].text, 'also run lint')
+
+  assert.match(await byName.get('remote_interrupt').execute({ dispatchId: key }), /requested/)
+  assert.equal(rpcCalls[1].method, 'session/cancel')
+
+  settleRun({ output: [{ type: 'text', text: 'all tests passed' }], stopReason: 'completed' })
+  await new Promise(r => setImmediate(r))
+  const done = await byName.get('remote_wait').execute({ dispatchId: key, timeoutMs: 0 })
+  assert.match(done, /state: succeeded/)
+  assert.match(done, /all tests passed/)
+  assert.match(await byName.get('remote_wait').execute({ dispatchId: 'missing' }), /unknown dispatchId/)
+}
+
 
 const calls = []
 let listCalls = 0

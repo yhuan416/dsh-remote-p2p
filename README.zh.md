@@ -151,6 +151,12 @@ Hub 可以把任务交给远端 dsh 后端，在它自己的环境（文件、�
   `cwd`；与 `cwd` 互斥。路径会通过 ssh 读取后端的 workspace store 解析，所以只有 upstream、没有 ssh
   的远端需要直接给 id。用 `cwd` 建的会话目录正确，但不会写进 workspace store（在 hub 的工作区聚合里
   表现为 orphan）。
+- **异步派发四件套**：`remote_dispatch` / `remote_wait` / `remote_steer` / `remote_interrupt`。
+  `remote_dispatch { host?, task, cwd?, workspace?, session?, key?, timeoutMs? }` 立刻返回
+  `dispatchId`，远端在后台继续跑；`remote_wait` 观察收据（`pending/running/succeeded/failed/
+  cancelled/unknown`）并按需等待；`remote_steer` 给同一个远端会话补一句话（跑着时排队、结束后
+  续聊）；`remote_interrupt` 请求停止。同一个 `key` 重复调用只会得到同一份收据，不会起第二个远端
+  会话；`unknown` 表示结果无法确认，应先查远端会话而不是重提。
 - **原生 dsh 子代理 provider**：每个远端一个 `remote-dsh-<id>`。在 profile 里加一行工具配置
   把它暴露给 agent（新增远端后需重启）：
 

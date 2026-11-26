@@ -196,6 +196,8 @@ curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3080/remotes/
 1. **通用工具**（无需改 profile，注册了远端就生效）：agent 调 `remote_subagent`
    `{ host: "n100", task: "...", cwd?: "/home/yhuan/workspace/gitlab/new_fw" }`。
    工具会在远端建会话、下发任务、等 turn 结束并返回最终文本；`session=` 可续用上一次远端会话。
+   长任务改用异步四件套：`remote_dispatch` 拿 `dispatchId`，`remote_wait` 观察/等待，
+   `remote_steer` 补话，`remote_interrupt` 停止；同一个 `key` 幂等，不会重复起会话。
 2. **原生子代理 provider**：每个远端注册为 `remote-dsh-<id>`。在
    `~/.dsh/profiles/web/cordis.patch.yml` 加：
 
